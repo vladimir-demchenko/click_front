@@ -13,6 +13,7 @@ import axios from 'axios';
 
 import cls from './MainPage.module.scss'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
 
 dayjs.locale('ru')
 
@@ -49,16 +50,8 @@ export const MainPage = () => {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['proxies'] })
   })
   const [settings, setSettings] = useState(false);
-  const WS_URL = 'ws://168.100.8.246:8000/'
-  const API_URL = 'http://168.100.8.246:8000'
+  const API_URL = 'http://localhost:8000'
   const regex = /^http:\/\/([^:]+:[^@]+)@([^:]+:[^/]+)/
-
-  const { sendJsonMessage, lastJsonMessage, readyState } = useWebSocket(
-    WS_URL,
-    {
-      shouldReconnect: () => true
-    }
-  )
 
   const handlePause = () => {
     pauseMutation.mutate({
@@ -85,49 +78,32 @@ export const MainPage = () => {
     })
   }
 
-  const configClicks = useMemo(() => {
-    return {
-      clicks: lastJsonMessage?.clicks,
-      allClicks: lastJsonMessage?.allClicks
-    }
-  }, [lastJsonMessage])
-
-  useEffect(() => {
-    console.log(lastJsonMessage)
-    if (lastJsonMessage !== null) {
-      setMessages((prev) => [...prev, lastJsonMessage])
-    }
-  }, [lastJsonMessage])
-
-  if (isLoading || isProxyLoading) {
-    return <div>Loading...</div>
-  }
-
   return (
     <Flex className={cls.mainPage} align='center' justify='space-around' vertical gap={10}>
       <Card style={{ width: '90%', maxHeight: '70vh', overflowY: 'auto' }}>
         <div className={cls.header}>
           <span>Info: </span>
-          <span>Количество кликов: {configClicks.clicks ?? 0}/{configClicks.allClicks ?? 0}</span>
-          {config.pause ? <Button onClick={handlePause} type='primary'>Возобновить работу</Button> : <Button onClick={handlePause} danger>Остановить работу</Button>}
+          {/* <span>Количество кликов: {configClicks.clicks ?? 0}/{configClicks.allClicks ?? 0}</span> */}
           <Button onClick={() => setSettings((prev) => !prev)}><SettingOutlined /></Button>
         </div>
         {settings && (
           <Flex style={{ marginTop: 15 }} vertical gap='14px'>
             <Flex align='center' justify='center'>
               <Form onFinish={handleChange} name='config' layout='inline'>
-                <Form.Item initialValue={config?.url} name='url' label='Ссылка'><Input /></Form.Item>
+                {/* <Form.Item initialValue={config?.url} name='url' label='Ссылка'><Input /></Form.Item> */}
                 <Form.Item initialValue={config?.api_key} name='api_key' label='Ключ API'><Input /></Form.Item>
                 <Form.Item><Button htmlType='submit' type='primary'>Сохранить</Button></Form.Item>
               </Form>
             </Flex>
             <div className={cls.formWrapper}>
-              <Form onFinish={(values) => handleChangeProxy(values, 1)} initialValues={{
-                proxy_id: proxies[0].proxy_id,
-                'url:port': proxies[0].url.match(regex)[2],
-                'login:password': proxies[0].url.match(regex)[1],
-                change_ip: proxies[0].change_ip
-              }} name='proxy1'>
+              <Form onFinish={(values) => handleChangeProxy(values, 1)}
+                initialValues={{
+                  proxy_id: proxies[0].proxy_id,
+                  'url:port': proxies[0].url.match(regex)[2],
+                  'login:password': proxies[0].url.match(regex)[1],
+                  change_ip: proxies[0].change_ip
+                }}
+                name='proxy1'>
                 <Form.Item name='proxy_id' label='Proxy id'>
                   <Input />
                 </Form.Item>
@@ -147,7 +123,7 @@ export const MainPage = () => {
                   </Space>
                 </Form.Item>
               </Form>
-              <Form onFinish={(values) => handleChangeProxy(values, 2)}
+              {/* <Form onFinish={(values) => handleChangeProxy(values, 2)}
                 initialValues={proxies[1] ? {
                   proxy_id: proxies[1].proxy_id,
                   'url:port': proxies[1].url.match(regex)[2],
@@ -254,17 +230,20 @@ export const MainPage = () => {
                     <Button>Удалить</Button>
                   </Space>
                 </Form.Item>
-              </Form>
+              </Form> */}
             </div>
           </Flex>
         )
         }
       </Card>
       <Card style={{ width: '90%', height: '70vh', overflowY: 'auto' }}>
-        {messages.map((message, idx) => (
-          <div key={idx}>
-            <p>Город - {message.city}, сделанно кликов - {message.cityClicks}/{message.allCityClicks} | {dayjs(message.time).locale('ru').format('DD/MM/YYYY HH:mm:ss')}</p>
-          </div>
+        {proxies?.map((proxy) => (
+          <Link to={`/${proxy?.id}`} key={proxy?.id}>
+            <Flex vertical gap='small'>
+              <span>{proxy?.proxy_id}</span>
+              <span>{proxy?.url}</span>
+            </Flex>
+          </Link>
         ))}
       </Card>
     </Flex>
