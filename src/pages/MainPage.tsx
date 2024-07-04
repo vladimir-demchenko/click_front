@@ -50,7 +50,7 @@ export const MainPage = () => {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['proxies'] })
   })
   const [settings, setSettings] = useState(false);
-  const API_URL = 'http://localhost:8000'
+  const API_URL = 'http://206.188.196.107:8000'
   const regex = /^http:\/\/([^:]+:[^@]+)@([^:]+:[^/]+)/
 
   const handlePause = () => {
@@ -237,7 +237,7 @@ export const MainPage = () => {
         }
       </Card>
       <Card style={{ width: '90%', height: '70vh', overflowY: 'auto' }}>
-        {proxies?.map((proxy) => (
+        {proxies?.map((proxy: any) => (
           <Link to={`/${proxy?.id}`} key={proxy?.id}>
             <Flex vertical gap='small'>
               <span>{proxy?.proxy_id}</span>
