@@ -58,7 +58,7 @@ export const ProxyPage = () => {
         }
       }
       else {
-        restart(dayjs().add((proxy?.targetClicks - proxy?.clicks) / getDiff(config?.interval.split("-")[1]).diff(dayjs().locale('ru'), "seconds"), "seconds").locale('ru').toDate())
+        restart(dayjs().add(Math.ceil(getDiff(config?.interval.split("-")[1]).diff(dayjs().locale('ru'), "seconds") / (proxy?.targetClicks - proxy?.clicks)), "seconds").toDate())
         queryClient.invalidateQueries({ queryKey: ['config'] })
         queryClient.invalidateQueries({ queryKey: ['proxy'] })
         messageApi.success(data.statusText)
@@ -79,8 +79,6 @@ export const ProxyPage = () => {
   const handleClick = () => {
     clickMutation.mutate({ id: Number(id) })
   }
-
-  console.log(config?.interval.split("-")[1])
 
   return (
     <div style={{ padding: 40 }}>
