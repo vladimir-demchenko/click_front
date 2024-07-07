@@ -28,7 +28,8 @@ export const MainPage = () => {
         `${API_URL}/config`
       )
       return data
-    }
+    },
+    refetchInterval: 30000
   });
   const pauseMutation = useMutation({
     mutationFn: (data) => axios.put(API_URL + '/config/1', data),
@@ -51,6 +52,7 @@ export const MainPage = () => {
   })
   const [settings, setSettings] = useState(false);
   const API_URL = 'http://206.188.196.107:8000'
+  // const API_URL = 'http://localhost:8000'
   const regex = /^http:\/\/([^:]+:[^@]+)@([^:]+:[^/]+)/
 
   const handlePause = () => {
