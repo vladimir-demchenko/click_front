@@ -51,7 +51,7 @@ export const MainPage = () => {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['proxies'] })
   })
   const [settings, setSettings] = useState(false);
-  const API_URL = 'http://206.188.196.107:8000'
+  const API_URL = 'http://38.180.109.78:8000'
   // const API_URL = 'http://localhost:8000'
   const regex = /^http:\/\/([^:]+:[^@]+)@([^:]+:[^/]+)/
 
