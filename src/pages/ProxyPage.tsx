@@ -27,8 +27,8 @@ export const ProxyPage = () => {
   const [shouldClear, setShouldClear] = useState(false);
 
   const [messageApi, contextHolder] = message.useMessage();
-  const API_URL = 'http://38.180.109.78:8000'
-  // const API_URL = 'http://localhost:8000'
+  // const API_URL = 'http://38.180.109.78:8000'
+  const API_URL = 'http://localhost:8000'
   const { data: client, isLoading } = useQuery({
     queryKey: ['proxy'],
     queryFn: async () => {
@@ -39,36 +39,40 @@ export const ProxyPage = () => {
     }
   });
 
-  // const { data: config } = useQuery({
-  //   queryKey: ['config'],
-  //   queryFn: async () => {
-  //     const { data } = await axios.get(
-  //       `${API_URL}/config`
-  //     )
-  //     return data
-  //   },
-  //   refetchInterval: 30000
-  // });
+  const scheduleMutation = useMutation({
+    mutationFn: async (data: { now: string }) => await axios.post(API_URL + `/schedule`, data)
+  })
+
+  const { data: config } = useQuery({
+    queryKey: ['config'],
+    queryFn: async () => {
+      await scheduleMutation.mutateAsync({ now: dayjs().locale('ru').toISOString() })
+      const { data } = await axios.get(
+        `${API_URL}/config`
+      )
+      return data
+    },
+    refetchInterval: 60000
+  });
+
+  const incrementCounterMutation = useMutation({
+    mutationFn: (city_id: number) => axios.patch(API_URL + `/click/${city_id}`)
+  })
 
   const { totalSeconds, restart } = useTimer({ expiryTimestamp: dayjs().toDate() })
   const clickMutation = useMutation({
     mutationFn: (data: { id: number }) => axios.patch(API_URL + `/take/${data.id}`),
-    onSuccess: (data) => {
-      if (data.data.status === 'Fail') {
-        messageApi.error(data.data.message)
-        if (data.data?.time) {
-          restart(dayjs.unix(data.data?.time).locale('ru').toDate())
-        }
-      }
-      else {
-        // restart(dayjs().add(Math.ceil(getDiff(config?.interval.split("-")[1]).diff(dayjs().locale('ru'), "seconds") / (proxy?.targetClicks - proxy?.clicks)), "seconds").toDate())
-        setClickData(data.data)
+    onSuccess: (res) => {
+      if (res.data.status) {
+        incrementCounterMutation.mutate(res.data.result.proxy.city_id)
+        setClickData(res.data)
         setShouldClear(true)
         queryClient.invalidateQueries({ queryKey: ['config'] })
         queryClient.invalidateQueries({ queryKey: ['proxy'] })
-        messageApi.success(data.statusText)
+        messageApi.success(res.statusText)
+      } else {
+        messageApi.error('error')
       }
-
     }
   })
   const browserApi = useMutation({
@@ -84,6 +88,7 @@ export const ProxyPage = () => {
   const deleteProfile = useMutation({
     mutationFn: (data: { id: number, proxy_id: any, browser_proxy_id: any, profile_id: any }) => axios.patch(API_URL + `/untake/${data.id}?profile_id=${data.profile_id}&browser_proxy_id=${data.browser_proxy_id}&proxy_id=${data.proxy_id}`),
     onSuccess: () => {
+      restart(dayjs().add(config?.delay, "seconds").toDate())
       setShouldClear(false)
       messageApi.success('OK')
     }
@@ -101,21 +106,20 @@ export const ProxyPage = () => {
     <div style={{ padding: 40 }}>
       {contextHolder}
       <Flex vertical gap={20}>
-        {/*<Flex gap={100}>
-          <Flex vertical gap={10}>
+        <Flex gap={100}>
+          {/* <Flex vertical gap={10}>
             <span>IP: <Typography.Text copyable>{proxy?.url.match(regex)[2].split(':')[0]}</Typography.Text></span>
             <span>Port: <Typography.Text copyable>{proxy?.url.match(regex)[2].split(':')[1]}</Typography.Text></span>
             <span>Login: <Typography.Text copyable>{proxy?.url.match(regex)[1].split(':')[0]}</Typography.Text></span>
             <span>Password: <Typography.Text copyable>{proxy?.url.match(regex)[1].split(':')[1]}</Typography.Text></span>
             <span><Typography.Text copyable>{proxy?.change_ip}</Typography.Text></span>
             <a href='https://dolphin-anty.com/panel/#/api' target='_blank'>Получить токен браузера</a>
-          </Flex>
+          </Flex> */}
           <Flex vertical gap={10}>
             <span>Текущий интервал {config?.interval}</span>
-            <span>Количество кликов - {proxy?.clicks} / {proxy?.targetClicks}</span>
             <span>Следующий клик через {totalSeconds} секунд</span>
           </Flex>
-        </Flex>*/}
+        </Flex>
         <a href='https://dolphin-anty.com/panel/#/api' target='_blank'>Получить токен браузера</a>
         <Flex vertical>
           <Form
