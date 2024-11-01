@@ -27,8 +27,8 @@ export const ProxyPage = () => {
   const [shouldClear, setShouldClear] = useState(false);
 
   const [messageApi, contextHolder] = message.useMessage();
-  // const API_URL = 'http://38.180.109.78:8000'
-  const API_URL = 'http://localhost:8000'
+  const API_URL = 'http://38.180.109.78:8000'
+  // const API_URL = 'http://localhost:8000'
   const { data: client, isLoading } = useQuery({
     queryKey: ['proxy'],
     queryFn: async () => {
